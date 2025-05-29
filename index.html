@@ -3,73 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>بوصلة اتجاه القبلة</title>
+  <title>بوصلة القبلة الدائرية</title>
   <style>
     body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: white;
-      font-family: 'Arial', sans-serif;
       margin: 0;
       padding: 0;
+      background-color: #111;
+      color: white;
+      font-family: Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      text-align: center;
+      height: 100vh;
     }
 
-    h1 {
-      font-size: 2rem;
-      color: #ffdd57;
-      margin-bottom: 20px;
-    }
-
-    #compass {
-      width: 260px;
-      height: 260px;
-      border: 10px solid #ffdd57;
-      border-radius: 50%;
+    #compass-container {
       position: relative;
-      transition: transform 0.3s ease-out;
-      background-color: #1e2a38;
-      box-shadow: 0 0 20px rgba(255, 221, 87, 0.3);
-    }
-
-    #arrow {
-      width: 0;
-      height: 0;
-      border-left: 15px solid transparent;
-      border-right: 15px solid transparent;
-      border-bottom: 60px solid #ff4d4d;
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    #center-dot {
-      width: 20px;
-      height: 20px;
-      background-color: #ffdd57;
+      width: 300px;
+      height: 300px;
+      border: 8px solid #333;
       border-radius: 50%;
+      background-color: #000;
+    }
+
+    #north-pointer {
       position: absolute;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%);
-      box-shadow: 0 0 10px #ffdd57;
+      width: 4px;
+      height: 100px;
+      background-color: red;
+      transform-origin: bottom center;
+    }
+
+    #qibla-pointer {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 80px solid gold;
+      transform-origin: bottom center;
+    }
+
+    #kaaba {
+      position: absolute;
+      font-size: 18px;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
     }
 
     #status {
       margin-top: 20px;
       font-size: 1rem;
-      color: #eee;
+      color: #ccc;
+      text-align: center;
     }
 
     #permission-btn {
-      margin-top: 15px;
+      margin-top: 10px;
       padding: 10px 20px;
-      font-size: 1rem;
+      font-size: 16px;
       background-color: #ffdd57;
       color: #000;
       border: none;
@@ -81,10 +79,10 @@
   </style>
 </head>
 <body>
-  <h1>بوصلة اتجاه القبلة</h1>
-  <div id="compass">
-    <div id="arrow"></div>
-    <div id="center-dot"></div>
+  <div id="compass-container">
+    <div id="kaaba">🕋</div>
+    <div id="north-pointer"></div>
+    <div id="qibla-pointer"></div>
   </div>
   <div id="status">جاري تحديد الموقع...</div>
   <button id="permission-btn" onclick="requestPermission()">السماح باستخدام البوصلة (iOS)</button>
@@ -93,7 +91,8 @@
     const kaabaLat = 21.4225;
     const kaabaLng = 39.8262;
     const status = document.getElementById("status");
-    const compass = document.getElementById("compass");
+    const northPointer = document.getElementById("north-pointer");
+    const qiblaPointer = document.getElementById("qibla-pointer");
     const permissionBtn = document.getElementById("permission-btn");
 
     function toRadians(deg) {
@@ -114,15 +113,16 @@
       return (toDegrees(bearing) + 360) % 360;
     }
 
-    function updateCompass(angle) {
-      compass.style.transform = `rotate(${-angle}deg)`;
+    function updatePointers(heading, qiblaAngle) {
+      northPointer.style.transform = `translate(-50%, -100%) rotate(${-heading}deg)`;
+      qiblaPointer.style.transform = `translate(-50%, -100%) rotate(${qiblaAngle - heading}deg)`;
     }
 
     function initCompass(qiblaAngle) {
       window.addEventListener("deviceorientation", (event) => {
         if (event.alpha !== null) {
-          let heading = event.webkitCompassHeading || event.alpha;
-          updateCompass(heading - qiblaAngle);
+          const heading = event.webkitCompassHeading || event.alpha;
+          updatePointers(heading, qiblaAngle);
         }
       }, true);
     }
