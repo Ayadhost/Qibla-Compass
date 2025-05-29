@@ -1,67 +1,76 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>بوصلة اتجاه القبلة</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
-      background-color: #121212;
-      color: #fff;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
       font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
       min-height: 100vh;
-      margin: 0;
       text-align: center;
     }
 
     h1 {
-      font-size: 1.8rem;
+      font-size: 2rem;
+      color: #ffdd57;
       margin-bottom: 20px;
-      color: #f9d342;
     }
 
     #compass {
-      width: 280px;
-      height: 280px;
-      border: 12px solid #f9d342;
+      width: 260px;
+      height: 260px;
+      border: 10px solid #ffdd57;
       border-radius: 50%;
       position: relative;
-      margin: 20px auto;
       transition: transform 0.3s ease-out;
+      background-color: #1e2a38;
+      box-shadow: 0 0 20px rgba(255, 221, 87, 0.3);
     }
 
     #arrow {
       width: 0;
       height: 0;
-      border-left: 18px solid transparent;
-      border-right: 18px solid transparent;
-      border-bottom: 50px solid #ff4d4d;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 60px solid #ff4d4d;
       position: absolute;
-      top: 30px;
+      top: 20px;
       left: 50%;
       transform: translateX(-50%);
+    }
+
+    #center-dot {
+      width: 20px;
+      height: 20px;
+      background-color: #ffdd57;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 10px #ffdd57;
     }
 
     #status {
       margin-top: 20px;
       font-size: 1rem;
-      color: #ccc;
+      color: #eee;
     }
 
     #permission-btn {
       margin-top: 15px;
-      padding: 12px 24px;
-      font-size: 16px;
-      background-color: #f9d342;
+      padding: 10px 20px;
+      font-size: 1rem;
+      background-color: #ffdd57;
       color: #000;
       border: none;
       border-radius: 8px;
@@ -69,26 +78,13 @@
       font-weight: bold;
       display: none;
     }
-
-    @media (max-width: 400px) {
-      #compass {
-        width: 200px;
-        height: 200px;
-      }
-
-      #arrow {
-        border-left: 12px solid transparent;
-        border-right: 12px solid transparent;
-        border-bottom: 35px solid #ff4d4d;
-        top: 25px;
-      }
-    }
   </style>
 </head>
 <body>
-  <h1>بوصلة تحديد اتجاه القبلة</h1>
+  <h1>بوصلة اتجاه القبلة</h1>
   <div id="compass">
     <div id="arrow"></div>
+    <div id="center-dot"></div>
   </div>
   <div id="status">جاري تحديد الموقع...</div>
   <button id="permission-btn" onclick="requestPermission()">السماح باستخدام البوصلة (iOS)</button>
