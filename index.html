@@ -1,1 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>بوصلة القبلة</title>
+  <style>
+    body {
+      background-color: #222;
+      color: #fff;
+      text-align: center;
+      font-family: sans-serif;
+      padding: 20px;
+    }
 
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    #compass {
+      width: 250px;
+      height: 250px;
+      border: 10px solid #fff;
+      border-radius: 50%;
+      margin: 20px auto;
+      position: relative;
+      transform: rotate(0deg);
+      transition: transform 0.2s ease-out;
+    }
+
+    #arrow {
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 40px solid red;
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    #status {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>بوصلة اتجاه القبلة</h1>
+  <div id="compass">
+    <div id="arrow"></div>
+  </div>
+  <div id="status">جاري تحديد الاتجاه...</div>
+
+  <script>
+    const kaabaLat = 21.4225;
+    const kaabaLng = 39.8262;
+    const status = document.getElementById("status");
+    const compass = document.getElementById("compass");
+
+    let userHeading = 0;
+
+    function toRadians(deg) {
+      return deg * Math.PI / 180;
+    }
+
+    function toDegrees(rad) {
+      return rad * 180 / Math.PI;
+    }
+
+    function getQiblaDirection(lat, lng) {
+      const dLon = toRadians(kaabaLng - lng);
+      const lat1 = toRadians(lat);
+      const lat2 = toRadians(kaabaLat);
+
+      const x = Math.sin(dLon);
+      const y = Math.cos(lat1) * Math.tan(lat2) - Math.sin(lat1) * Math.cos(dLon);
+      const bearing = Math.atan2(x, y);
+
+      return (toDegrees(bearing) + 360) % 360;
+    }
+
+    function updateCompass(angle) {
+      compass.style.transform = `rotate(${-angle}deg)`;
+    }
+
+    function initCompass(qiblaAngle) {
+      window.addEventListener("deviceorientationabsolute", (event) => {
+        if (event.absolute && event.alpha !== null) {
+          let heading = event.alpha;
+          updateCompass(heading - qiblaAngle);
+        }
+      }, true);
+
+      // Fallback for some browsers
+      window.addEventListener("deviceorientation", (event) => {
+        if (event.alpha !== null) {
+          let heading = event.webkitCompassHeading || event.alpha;
+          updateCompass(heading - qiblaAngle);
+        }
+      }, true);
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const qiblaAngle = getQiblaDirection(lat, lng);
+        status.textContent = `اتجاه القبلة: ${qiblaAngle.toFixed(2)}°`;
+
+        initCompass(qiblaAngle);
+      }, error => {
+        status.textContent = "فشل في تحديد الموقع.";
+      });
+    } else {
+      status.textContent = "المتصفح لا يدعم تحديد الموقع.";
+    }
+  </script>
+</body>
+</html>
