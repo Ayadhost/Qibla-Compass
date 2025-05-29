@@ -3,64 +3,102 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>بوصلة القبلة</title>
+  <title>بوصلة اتجاه القبلة</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background-color: #222;
+      background-color: #121212;
       color: #fff;
-      text-align: center;
-      font-family: sans-serif;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       padding: 20px;
+      min-height: 100vh;
+      margin: 0;
+      text-align: center;
     }
 
     h1 {
-      font-size: 24px;
+      font-size: 1.8rem;
       margin-bottom: 20px;
+      color: #f9d342;
     }
 
     #compass {
-      width: 250px;
-      height: 250px;
-      border: 10px solid #fff;
+      width: 280px;
+      height: 280px;
+      border: 12px solid #f9d342;
       border-radius: 50%;
-      margin: 20px auto;
       position: relative;
-      transform: rotate(0deg);
-      transition: transform 0.2s ease-out;
+      margin: 20px auto;
+      transition: transform 0.3s ease-out;
     }
 
     #arrow {
       width: 0;
       height: 0;
-      border-left: 15px solid transparent;
-      border-right: 15px solid transparent;
-      border-bottom: 40px solid red;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-bottom: 50px solid #ff4d4d;
       position: absolute;
-      top: 20px;
+      top: 30px;
       left: 50%;
       transform: translateX(-50%);
     }
 
     #status {
       margin-top: 20px;
+      font-size: 1rem;
+      color: #ccc;
+    }
+
+    #permission-btn {
+      margin-top: 15px;
+      padding: 12px 24px;
       font-size: 16px;
+      background-color: #f9d342;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      display: none;
+    }
+
+    @media (max-width: 400px) {
+      #compass {
+        width: 200px;
+        height: 200px;
+      }
+
+      #arrow {
+        border-left: 12px solid transparent;
+        border-right: 12px solid transparent;
+        border-bottom: 35px solid #ff4d4d;
+        top: 25px;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>بوصلة اتجاه القبلة</h1>
+  <h1>بوصلة تحديد اتجاه القبلة</h1>
   <div id="compass">
     <div id="arrow"></div>
   </div>
-  <div id="status">جاري تحديد الاتجاه...</div>
+  <div id="status">جاري تحديد الموقع...</div>
+  <button id="permission-btn" onclick="requestPermission()">السماح باستخدام البوصلة (iOS)</button>
 
   <script>
     const kaabaLat = 21.4225;
     const kaabaLng = 39.8262;
     const status = document.getElementById("status");
     const compass = document.getElementById("compass");
-
-    let userHeading = 0;
+    const permissionBtn = document.getElementById("permission-btn");
 
     function toRadians(deg) {
       return deg * Math.PI / 180;
@@ -74,11 +112,9 @@
       const dLon = toRadians(kaabaLng - lng);
       const lat1 = toRadians(lat);
       const lat2 = toRadians(kaabaLat);
-
       const x = Math.sin(dLon);
       const y = Math.cos(lat1) * Math.tan(lat2) - Math.sin(lat1) * Math.cos(dLon);
       const bearing = Math.atan2(x, y);
-
       return (toDegrees(bearing) + 360) % 360;
     }
 
@@ -87,14 +123,6 @@
     }
 
     function initCompass(qiblaAngle) {
-      window.addEventListener("deviceorientationabsolute", (event) => {
-        if (event.absolute && event.alpha !== null) {
-          let heading = event.alpha;
-          updateCompass(heading - qiblaAngle);
-        }
-      }, true);
-
-      // Fallback for some browsers
       window.addEventListener("deviceorientation", (event) => {
         if (event.alpha !== null) {
           let heading = event.webkitCompassHeading || event.alpha;
@@ -103,19 +131,39 @@
       }, true);
     }
 
+    function requestPermission() {
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission().then(response => {
+          if (response === 'granted') {
+            permissionBtn.style.display = "none";
+            location.reload();
+          } else {
+            status.textContent = "تم رفض الإذن باستخدام المستشعر.";
+          }
+        }).catch(err => {
+          status.textContent = "فشل في طلب الإذن: " + err;
+        });
+      }
+    }
+
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      permissionBtn.style.display = "inline-block";
+    }
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(position => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         const qiblaAngle = getQiblaDirection(lat, lng);
         status.textContent = `اتجاه القبلة: ${qiblaAngle.toFixed(2)}°`;
-
         initCompass(qiblaAngle);
       }, error => {
-        status.textContent = "فشل في تحديد الموقع.";
+        status.textContent = "فشل في تحديد الموقع الجغرافي.";
       });
     } else {
-      status.textContent = "المتصفح لا يدعم تحديد الموقع.";
+      status.textContent = "هذا المتصفح لا يدعم تحديد الموقع.";
     }
   </script>
 </body>
