@@ -1,99 +1,116 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>بوصلة القبلة الدائرية</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>بوصلة اتجاه القبلة</title>
   <style>
     body {
       margin: 0;
       padding: 0;
       background-color: #111;
-      color: white;
       font-family: Arial, sans-serif;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       height: 100vh;
+      color: white;
     }
 
-    #compass-container {
+    .compass {
       position: relative;
       width: 300px;
       height: 300px;
-      border: 8px solid #333;
       border-radius: 50%;
       background-color: #000;
+      border: 6px solid #444;
     }
 
-    #north-pointer {
+    .tick {
+      position: absolute;
+      width: 2px;
+      height: 10px;
+      background-color: #ccc;
+      top: 0;
+      left: 50%;
+      transform-origin: center 150px;
+    }
+
+    .degree-label {
+      position: absolute;
+      width: 30px;
+      text-align: center;
+      font-size: 10px;
+      color: #ccc;
+      transform-origin: center 90px;
+    }
+
+    .dir-label {
+      position: absolute;
+      width: 30px;
+      text-align: center;
+      font-weight: bold;
+      color: white;
+      font-size: 14px;
+      transform-origin: center 75px;
+    }
+
+    .needle-north {
       position: absolute;
       top: 50%;
       left: 50%;
       width: 4px;
-      height: 100px;
+      height: 90px;
       background-color: red;
+      transform: translate(-50%, -100%) rotate(0deg);
       transform-origin: bottom center;
+      transition: transform 0.6s ease;
     }
 
-    #qibla-pointer {
+    .needle-qibla {
       position: absolute;
       top: 50%;
       left: 50%;
       width: 0;
       height: 0;
-      border-left: 10px solid transparent;
-      border-right: 10px solid transparent;
-      border-bottom: 80px solid gold;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-bottom: 70px solid gold;
+      transform: translate(-50%, -100%) rotate(0deg);
       transform-origin: bottom center;
+      transition: transform 0.6s ease;
+      filter: drop-shadow(0 0 4px gold);
     }
 
-    #kaaba {
+    .kaaba {
       position: absolute;
-      font-size: 18px;
-      top: 10%;
+      top: 15%;
       left: 50%;
-      transform: translateX(-50%);
-    }
-
-    #status {
-      margin-top: 20px;
-      font-size: 1rem;
-      color: #ccc;
-      text-align: center;
-    }
-
-    #permission-btn {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #ffdd57;
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      display: none;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      background-color: white;
+      color: black;
+      border-radius: 50%;
+      padding: 4px;
+      box-shadow: 0 0 6px #fff;
     }
   </style>
 </head>
 <body>
-  <div id="compass-container">
-    <div id="kaaba">🕋</div>
-    <div id="north-pointer"></div>
-    <div id="qibla-pointer"></div>
+  <div class="compass" id="compass">
+    <div class="needle-north" id="needleNorth"></div>
+    <div class="needle-qibla" id="needleQibla"></div>
+    <div class="kaaba" id="kaaba">🕋</div>
   </div>
-  <div id="status">جاري تحديد الموقع...</div>
-  <button id="permission-btn" onclick="requestPermission()">السماح باستخدام البوصلة (iOS)</button>
 
   <script>
+    const compass = document.getElementById("compass");
+    const needleNorth = document.getElementById("needleNorth");
+    const needleQibla = document.getElementById("needleQibla");
+    const kaaba = document.getElementById("kaaba");
+
     const kaabaLat = 21.4225;
     const kaabaLng = 39.8262;
-    const status = document.getElementById("status");
-    const northPointer = document.getElementById("north-pointer");
-    const qiblaPointer = document.getElementById("qibla-pointer");
-    const permissionBtn = document.getElementById("permission-btn");
 
     function toRadians(deg) {
       return deg * Math.PI / 180;
@@ -113,53 +130,58 @@
       return (toDegrees(bearing) + 360) % 360;
     }
 
-    function updatePointers(heading, qiblaAngle) {
-      northPointer.style.transform = `translate(-50%, -100%) rotate(${-heading}deg)`;
-      qiblaPointer.style.transform = `translate(-50%, -100%) rotate(${qiblaAngle - heading}deg)`;
+    function updateNeedles(heading, qiblaAngle) {
+      needleNorth.style.transform = `translate(-50%, -100%) rotate(${-heading}deg)`;
+      needleQibla.style.transform = `translate(-50%, -100%) rotate(${qiblaAngle - heading}deg)`;
+      kaaba.style.transform = `translate(-50%, -50%) rotate(${qiblaAngle - heading}deg)`;
     }
 
     function initCompass(qiblaAngle) {
       window.addEventListener("deviceorientation", (event) => {
         if (event.alpha !== null) {
           const heading = event.webkitCompassHeading || event.alpha;
-          updatePointers(heading, qiblaAngle);
+          updateNeedles(heading, qiblaAngle);
         }
       }, true);
     }
 
-    function requestPermission() {
-      if (typeof DeviceOrientationEvent !== 'undefined' &&
-          typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission().then(response => {
-          if (response === 'granted') {
-            permissionBtn.style.display = "none";
-            location.reload();
-          } else {
-            status.textContent = "تم رفض الإذن باستخدام المستشعر.";
-          }
-        }).catch(err => {
-          status.textContent = "فشل في طلب الإذن: " + err;
-        });
+    function createMarks() {
+      for (let i = 0; i < 360; i += 45) {
+        const tick = document.createElement("div");
+        tick.className = "tick";
+        tick.style.transform = `rotate(${i}deg)`;
+        compass.appendChild(tick);
+
+        const label = document.createElement("div");
+        label.className = "degree-label";
+        label.style.transform = `rotate(${i}deg) translateY(-90px) rotate(${-i}deg)`;
+        label.innerText = i;
+        compass.appendChild(label);
+      }
+
+      const dirs = ['N', 'E', 'S', 'W'];
+      const angles = [0, 90, 180, 270];
+      for (let i = 0; i < dirs.length; i++) {
+        const dir = document.createElement("div");
+        dir.className = "dir-label";
+        dir.style.transform = `rotate(${angles[i]}deg) translateY(-75px) rotate(${-angles[i]}deg)`;
+        dir.innerText = dirs[i];
+        compass.appendChild(dir);
       }
     }
 
-    if (typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission === 'function') {
-      permissionBtn.style.display = "inline-block";
-    }
-
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(position => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
         const qiblaAngle = getQiblaDirection(lat, lng);
-        status.textContent = `اتجاه القبلة: ${qiblaAngle.toFixed(2)}°`;
         initCompass(qiblaAngle);
-      }, error => {
-        status.textContent = "فشل في تحديد الموقع الجغرافي.";
+        createMarks();
+      }, err => {
+        alert("فشل في الحصول على الموقع الجغرافي.");
       });
     } else {
-      status.textContent = "هذا المتصفح لا يدعم تحديد الموقع.";
+      alert("المتصفح لا يدعم تحديد الموقع.");
     }
   </script>
 </body>
